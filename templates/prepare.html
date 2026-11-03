@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prepare Your Trip | TripCraft</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-page="prepare">
+<header class="topbar">
+  <a class="brand" href="{{ url_for('plan') }}">🧭 TripCraft</a>
+  <nav><a href="{{ url_for('plan') }}">1 Plan</a><span class="active">2 Prepare</span><a href="{{ url_for('track', trip_id=trip.id) }}">3 Track</a></nav>
+</header>
+<main class="container">
+  <h1>Prepare your trip to {{ trip.destination }}</h1>
+  <p class="lead">{{ trip.days }} days · {{ trip.climate }} · {{ trip.trip_type }} · {{ trip.travellers }} traveller(s)</p>
+
+  <section class="card" id="packing">
+    <h2>🎒 Personalized packing assistant</h2>
+    <p class="muted">Built from your climate, trip type, days and activities. Tap an item to mark it packed.</p>
+    <div class="packing-summary">
+      <strong id="pack-text">0 of 0 items packed</strong>
+      <div class="progress"><div id="pack-bar" class="progress-fill"></div></div>
+    </div>
+    <div id="filters" class="chips"></div>
+    <div class="add-custom">
+      <input type="text" id="custom-name" placeholder="Add your own item, e.g. Camera" maxlength="60">
+      <select id="custom-category"></select>
+      <button type="button" id="custom-add" class="btn primary">Add item</button>
+    </div>
+    <div id="packing-board"></div>
+  </section>
+
+  <section class="card" id="itinerary">
+    <h2>📅 Itinerary builder</h2>
+    {% for message in get_flashed_messages() %}<div class="alert">{{ message }}</div>{% endfor %}
+    <form method="POST" action="{{ url_for('add_itinerary', trip_id=trip.id) }}" class="itin-form">
+      <label>Day<select name="day_number" required>
+        {% for d in itinerary_days %}<option value="{{ d }}">Day {{ d }}</option>{% endfor %}</select></label>
+      <label>Place / activity<input type="text" name="activity_name" required maxlength="80" placeholder="e.g. Botanical Garden"></label>
+      <label>Time of day<select name="time_of_day">{% for t in times %}<option>{{ t }}</option>{% endfor %}</select></label>
+      <label>Category<select name="category">{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select></label>
+      <label>Estimated expense (₹)<input type="number" name="estimated_expense" min="0" step="any" value="0"></label>
+      <button class="btn primary" type="submit">Add Activity</button>
+    </form>
+
+    <div class="days">
+      {% for day, items in itinerary_days.items() %}
+      <div class="day-card">
+        <h3>Day {{ day }}</h3>
+        {% for item in items %}
+        <div class="activity">
+          <div>
+            <span class="tag">{{ item.time_of_day }}</span>
+            <strong>{{ item.activity_name }}</strong>
+            <div class="muted">{{ item.category }} · Estimated: {{ item.estimated_expense|inr }}</div>
+          </div>
+          <form method="POST" action="{{ url_for('delete_itinerary', trip_id=trip.id, item_id=item.id) }}">
+            <button class="icon-btn" title="Delete activity" aria-label="Delete activity">✕</button>
+          </form>
+        </div>
+        {% else %}<p class="muted">No activities yet.</p>{% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <p class="total-line">Estimated itinerary expense: <strong>{{ itinerary_total|inr }}</strong></p>
+  </section>
+
+  <a class="btn primary big" href="{{ url_for('track', trip_id=trip.id) }}">Start Trip / View Tracker</a>
+</main>
+<script id="trip-data" type="application/json">{{ trip_data|tojson }}</script>
+<script id="packing-data" type="application/json">{{ packing|tojson }}</script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

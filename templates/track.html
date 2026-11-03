@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Track Your Trip | TripCraft</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body data-page="track">
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('plan') }}">🧭 TripCraft</a>
+    <nav><a href="{{ url_for('plan') }}">1 Plan</a><a href="{{ url_for('prepare', trip_id=trip.id) }}">2
+        Prepare</a><span class="active">3 Track</span></nav>
+  </header>
+  <main class="container">
+    <h1>Track your trip</h1>
+    {% for message in get_flashed_messages() %}<div class="alert ok">{{ message }}</div>{% endfor %}
+
+    <section class="card">
+      <h2>🧳 Trip to {{ trip.destination }}</h2>
+      <p class="lead">{{ trip.days }} Days · {{ trip.climate }} | {{ trip.trip_type }}</p>
+      <div class="stats">
+        <div class="stat"><span>Packing</span><strong>{{ packed.done }} / {{ packed.total }} items packed</strong></div>
+        <div class="stat"><span>Budget</span><strong>{{ planned_expense|inr }} planned of {{ trip.total_budget|inr
+            }}</strong></div>
+        <div class="stat"><span>Remaining planned buffer</span><strong>{{ (trip.total_budget - planned_expense)|inr
+            }}</strong></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>🧾 Daily expense tracker</h2>
+      <form method="POST" action="{{ url_for('add_expense', trip_id=trip.id) }}" class="expense-form" id="expense-form">
+        <label>Day<select name="day_number" id="expense-day" required>
+            {% for card in day_cards %}<option value="{{ card.day }}">Day {{ card.day }}</option>{% endfor
+            %}</select></label>
+        {% for key, label, _ in categories %}
+        <label>{{ label }} (₹)<input type="number" name="{{ key }}" min="0" step="any" value="0"></label>
+        {% endfor %}
+        <button class="btn primary" type="submit">Save day expenses</button>
+      </form>
+      <div class="days">
+        {% for card in day_cards %}
+        <div class="day-card">
+          <h3>Day {{ card.day }}</h3>
+          <div class="muted">Planned approximate spend: {{ card.planned|inr }}</div>
+          {% if card.entry %}
+          <div>Actual spend: <strong>{{ card.entry.total|inr }}</strong></div>
+          <div class="{{ 'over' if card.difference > 0 else 'under' }}">Difference: {{ card.difference|inr_signed }}
+          </div>
+          {% else %}<div class="muted">No expenses entered yet.</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>📊 Adaptive budget status</h2>
+      <div class="stats five">
+        <div class="stat"><span>Original budget</span><strong>{{ trip.total_budget|inr }}</strong></div>
+        <div class="stat"><span>Actual spent so far</span><strong>{{ actual_spent|inr }}</strong></div>
+        <div class="stat"><span>Remaining budget</span><strong class="{{ 'over' if remaining_budget < 0 }}">{{
+            remaining_budget|inr }}</strong></div>
+        <div class="stat"><span>Remaining days</span><strong>{{ remaining_days }}</strong></div>
+        <div class="stat"><span>Suggested daily limit</span>
+          <strong>{% if remaining_days > 0 %}{{ daily_limit|inr }}/day{% else %}All days completed{% endif %}</strong>
+        </div>
+      </div>
+      <div class="progress">
+        <div class="progress-fill {{ 'danger' if actual_spent > trip.total_budget }}"
+          style="width: {{ [actual_spent / trip.total_budget * 100, 100]|min }}%"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>💡 Spending suggestions</h2>
+      <ul class="tips">{% for tip in suggestions %}<li>{{ tip }}</li>{% endfor %}</ul>
+    </section>
+  </main>
+  <script id="expense-data" type="application/json">{{ expenses|tojson }}</script>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+
+</html>

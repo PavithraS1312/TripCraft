@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Your Trip | TripCraft</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body data-page="plan">
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('plan') }}">🧭 TripCraft</a>
+    <nav><span class="active">1 Plan</span><span>2 Prepare</span><span>3 Track</span></nav>
+  </header>
+  <main class="container">
+    <h1>Plan your trip</h1>
+    <p class="lead">Tell us where you're going and how much you want to spend. We'll build your packing list next.</p>
+    {% for message in get_flashed_messages() %}<div class="alert">{{ message }}</div>{% endfor %}
+
+    <form id="trip-form" method="POST" action="{{ url_for('create_trip') }}" novalidate>
+      <section class="card">
+        <h2>🗺️ Trip details</h2>
+        <div class="grid-2">
+          <label>Destination<input type="text" name="destination" placeholder="e.g. Ooty" required></label>
+          <label>Number of days<input type="number" name="days" min="1" max="60" required></label>
+          <label>Number of travellers<input type="number" name="travellers" min="1" required></label>
+          <label>Climate
+            <select name="climate" required>
+              <option value="">Choose climate</option>
+              {% for c in climates %}<option>{{ c }}</option>{% endfor %}
+            </select></label>
+          <label>Trip type
+            <select name="trip_type" required>
+              <option value="">Choose trip type</option>
+              {% for t in trip_types %}<option>{{ t }}</option>{% endfor %}
+            </select></label>
+        </div>
+        <fieldset>
+          <legend>Planned activities / places</legend>
+          <div class="checks">
+            {% for a in activities %}<label class="check"><input type="checkbox" name="activities" value="{{ a }}"> {{ a
+              }}</label>{% endfor %}
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="card">
+        <h2>💰 Initial budget planner</h2>
+        <label>Total trip budget (₹)<input type="number" id="total_budget" name="total_budget" min="1" step="any"
+            required></label>
+        <div class="grid-3">
+          <label>Travel / main transport<input class="expense" type="number" name="travel" min="0" step="any"
+              value="0"></label>
+          <label>Accommodation<input class="expense" type="number" name="accommodation" min="0" step="any"
+              value="0"></label>
+          <label>Food<input class="expense" type="number" name="food" min="0" step="any" value="0"></label>
+          <label>Local transport<input class="expense" type="number" name="local_transport" min="0" step="any"
+              value="0"></label>
+          <label>Sightseeing / tickets<input class="expense" type="number" name="sightseeing" min="0" step="any"
+              value="0"></label>
+          <label>Shopping<input class="expense" type="number" name="shopping" min="0" step="any" value="0"></label>
+          <label>Miscellaneous<input class="expense" type="number" name="miscellaneous" min="0" step="any"
+              value="0"></label>
+        </div>
+        <div class="stats">
+          <div class="stat"><span>Total budget</span><strong id="out-total">₹0</strong></div>
+          <div class="stat"><span>Planned expense</span><strong id="out-planned">₹0</strong></div>
+          <div class="stat"><span>Remaining buffer</span><strong id="out-buffer">₹0</strong></div>
+        </div>
+        <div class="progress">
+          <div id="budget-bar" class="progress-fill"></div>
+        </div>
+        <p id="budget-note" class="muted">0% of your budget is allocated.</p>
+        <div id="budget-warning" class="alert" hidden></div>
+      </section>
+
+      <div id="form-errors" class="alert" hidden></div>
+      <button class="btn primary big" type="submit">Continue to Preparation</button>
+    </form>
+  </main>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+
+</html>
